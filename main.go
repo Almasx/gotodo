@@ -53,31 +53,16 @@ func handleCompleteFunc(w http.ResponseWriter, r *http.Request) {
 	todos[idInt].Completed = true
 	json.NewEncoder(w).Encode(todos[idInt])
 }
-
-func handleTodos(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		handleGetTodos(w, r)
-	case http.MethodPost:
-		handleCreateTodo(w, r)
-	case http.MethodPut:
-		handleCompleteFunc(w, r)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
+func getEnv(key, fallback string) string {
+    if value, ok := os.LookupEnv(key); ok {
+        return value
+    }
+    return fallback
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	
-	http.HandleFunc("/todos", handleTodos)
-	http.ListenAndServe(":"+port, nil)
+	http.HandleFunc("GET /todos", handleGetTodos)
+	http.HandleFunc("POST /todos", handleCreateTodo)
+	http.HandleFunc("PUT /todos", handleCompleteFunc)
+	http.ListenAndServe(":"+getEnv("PORT", "8080"), nil)
 }
-
-// testing 
-// curl -X GET http://localhost:8080/todos
-// curl -X POST http://localhost:8080/todos -H "Content-Type: application/json" -d '{"title": "Buy groceries"}'
-// curl -X PUT http://localhost:8080/todos?id=0
